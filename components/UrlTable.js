@@ -34,7 +34,7 @@ export default function UrlTable({ urls, onDelete, onCopy, hasMore, onLoadMore, 
 
             {/* Short Code */}
             <div
-              className="md:w-2/12 text-purple-400 cursor-pointer hover:underline truncate w-full md:w-auto flex items-center gap-2"
+              className="md:w-2/12 text-purple-400 cursor-pointer hover:underline truncate w-full flex items-center gap-2"
               onClick={() =>
                 navigator.clipboard
                   .writeText(`${window.location.origin}/${url.code}`)
@@ -46,13 +46,13 @@ export default function UrlTable({ urls, onDelete, onCopy, hasMore, onLoadMore, 
             </div>
 
             {/* Long URL */}
-            <div className="md:w-3/12 truncate text-white/60 pr-4 w-full md:w-auto flex items-center gap-2">
+            <div className="md:w-3/12 truncate text-white/60 pr-4 w-full flex items-center gap-2">
               <span className="md:hidden text-white/40 text-xs uppercase tracking-wide min-w-[40px]">Dest:</span>
               <span className="truncate">{url.longUrl}</span>
             </div>
 
              {/* Clicks */}
-            <div className="md:w-1/12 md:text-center text-white/80 w-full md:w-auto flex items-center gap-2">
+            <div className="md:w-1/12 md:text-center text-white/80 w-full flex items-center gap-2 md:justify-center">
                <span className="md:hidden text-white/40 text-xs uppercase tracking-wide">Clicks:</span>
               {url.clicks}
             </div>
@@ -63,10 +63,22 @@ export default function UrlTable({ urls, onDelete, onCopy, hasMore, onLoadMore, 
             </div>
 
              {/* Actions */}
-            <div className="md:w-2/12 text-right w-full md:w-auto mt-2 md:mt-0">
+            <div className="md:w-2/12 text-right w-full mt-2 md:mt-0 flex gap-2 md:block">
+               {/* Mobile Copy Button */}
+               <button
+                onClick={() =>
+                    navigator.clipboard
+                      .writeText(`${window.location.origin}/${url.code}`)
+                      .then(() => onCopy())
+                  }
+                className="md:hidden flex-1 text-purple-300 hover:text-purple-400 border border-purple-500/20 rounded py-1"
+               >
+                 Copy
+               </button>
+
               <button
                 onClick={() => onDelete(url.code)}
-                className="text-red-400 hover:text-red-500 transition opacity-80 hover:opacity-100 w-full md:w-auto border border-red-500/20 md:border-none rounded py-1 md:py-0"
+                className="text-red-400 hover:text-red-500 transition opacity-80 hover:opacity-100 w-full md:w-auto border border-red-500/20 md:border-none rounded py-1 md:py-0 flex-1 md:flex-none"
               >
                 Delete
               </button>
