@@ -1,78 +1,116 @@
-import Image from "next/image";
-import { Geist, Geist_Mono } from "next/font/google";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+import { useEffect, useState } from "react";
+import { useAuthState } from "react-firebase-hooks/auth";
+import { auth } from "@/lib/firebase";
+import Navbar from "@/components/Navbar";
+import UrlForm from "@/components/UrlForm";
+import UrlTable from "@/components/UrlTable";
+import { useRouter } from "next/router";
 
 export default function Home() {
+  const router = useRouter();
+
+  const [user, loading] = useAuthState(auth);
+  const [urls, setUrls] = useState([]);
+  const [toast, setToast] = useState("");
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (mounted && !loading && !user) {
+      router.replace("/login");
+    }
+  }, [mounted, loading, user, router]);
+
+  useEffect(() => {
+    if (user) {
+      fetchUrls();
+    }
+  }, [user]);
+
+  if (!mounted || loading || !user) {
+    return null;
+  }
+
+  const showToast = (msg) => {
+    setToast(msg);
+    setTimeout(() => setToast(""), 2000);
+  };
+
+  async function fetchUrls() {
+    try {
+      const res = await fetch(`/api/urls?uid=${user.uid}`, {
+        headers: {
+          "x-api-key": process.env.NEXT_PUBLIC_API_KEY,
+        },
+      });
+      const data = await res.json();
+      if (Array.isArray(data)) {
+        setUrls(data);
+      } else {
+        console.error("Failed to fetch URLs:", data);
+        setUrls([]);
+      }
+    } catch (err) {
+      console.error(err);
+      setUrls([]);
+    }
+  }
+
+  async function shorten(longUrl) {
+    try {
+      const res = await fetch("/api/shorten", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": process.env.NEXT_PUBLIC_API_KEY,
+        },
+        body: JSON.stringify({ longUrl, uid: user.uid }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        showToast(data.error || "Something went wrong");
+        return;
+      }
+      showToast("Short URL created");
+      fetchUrls();
+    } catch (error) {
+      showToast("Network error. Try again.");
+    }
+  }
+
+  async function deleteUrl(code) {
+    await fetch("/api/delete", {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": process.env.NEXT_PUBLIC_API_KEY,
+      },
+      body: JSON.stringify({ code, uid: user.uid }),
+    });
+    setUrls((prev) => prev.filter((u) => u.code !== code));
+  }
+
   return (
-    <div
-      className={`${geistSans.className} ${geistMono.className} flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black`}
-    >
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
+    <>
+      <Navbar user={user} />
+
+      <div className="max-w-5xl mx-auto pt-10">
+        <UrlForm onSubmit={shorten} />
+        <UrlTable
+          urls={urls}
+          onDelete={deleteUrl}
+          onCopy={() => showToast("Short URL copied to clipboard")}
         />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the index.js file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+      </div>
+
+      {toast && (
+        <div className="fixed bottom-6 right-6 glass px-5 py-3 text-sm text-white shadow-lg animate-fade">
+          {toast}
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs/pages/getting-started?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+      )}
+    </>
   );
 }

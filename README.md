@@ -1,40 +1,139 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/pages/api-reference/create-next-app).
+# URL Shortener
+
+A robust, Firebase-backed URL shortening service built with Next.js. This project provides a scalable API for creating, managing, and retrieving shortened URLs.
+
+## Features
+
+- **Shorten URLs**: Generate concise aliases for long URLs.
+- **Data Persistence**: Uses Firebase Firestore for reliable data storage.
+- **API Security**: Authenticated API endpoints using API keys.
+- **Validation**: Strict URL validation and host blocking capabilities.
+- **Reachability Check**: Verifies that the target URL is reachable before shortening.
 
 ## Getting Started
 
-First, run the development server:
+Follow these instructions to set up the project locally.
+
+### Prerequisites
+
+- Node.js (version 16 or higher)
+- npm or yarn
+
+### Installation
+
+1.  Clone the repository:
+    ```bash
+    git clone <repository-url>
+    ```
+
+2.  Install dependencies:
+    ```bash
+    npm install
+    # or
+    yarn install
+    ```
+
+### Configuration
+
+Create a `.env.local` file in the root directory with the following variables:
+
+```env
+NEXT_PUBLIC_FIREBASE_API_KEY=your_firebase_api_key
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_firebase_auth_domain
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_firebase_project_id
+NEXT_PUBLIC_BASE_URL=http://localhost:3000
+FIREBASE_PROJECT_ID=your_firebase_project_id
+FIREBASE_CLIENT_EMAIL=your_firebase_client_email
+FIREBASE_PRIVATE_KEY="your_firebase_private_key"
+API_KEY=your_secure_api_key
+```
+
+### Running the Application
+
+Start the development server:
 
 ```bash
 npm run dev
 # or
 yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+The application will be available at `http://localhost:3000`.
 
-You can start editing the page by modifying `pages/index.js`. The page auto-updates as you edit the file.
+## API Documentation
 
-[API routes](https://nextjs.org/docs/pages/building-your-application/routing/api-routes) can be accessed on [http://localhost:3000/api/hello](http://localhost:3000/api/hello). This endpoint can be edited in `pages/api/hello.js`.
+All API endpoints require authentication via the `x-api-key` header.
 
-The `pages/api` directory is mapped to `/api/*`. Files in this directory are treated as [API routes](https://nextjs.org/docs/pages/building-your-application/routing/api-routes) instead of React pages.
+### 1. Shorten URL
 
-This project uses [`next/font`](https://nextjs.org/docs/pages/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Creates a new shortened URL.
 
-## Learn More
+- **Endpoint**: `POST /api/shorten`
+- **Headers**:
+    - `x-api-key`: Your API key
+    - `Content-Type`: `application/json`
+- **Body**:
+    ```json
+    {
+      "longUrl": "https://example.com/very/long/url",
+      "uid": "user_identifier"
+    }
+    ```
+- **Response**:
+    ```json
+    {
+      "shortUrl": "http://localhost:3000/AbCdEf"
+    }
+    ```
 
-To learn more about Next.js, take a look at the following resources:
+### 2. Get User URLs
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn-pages-router) - an interactive Next.js tutorial.
+Retrieves all shortened URLs created by a specific user.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- **Endpoint**: `GET /api/urls`
+- **Headers**:
+    - `x-api-key`: Your API key
+- **Query Parameters**:
+    - `uid`: The user identifier
+- **Response**:
+    ```json
+    [
+      {
+        "code": "AbCdEf",
+        "longUrl": "https://example.com/very/long/url",
+        "uid": "user_identifier",
+        "clicks": 0,
+        "createdAt": 1672531200000
+      }
+    ]
+    ```
 
-## Deploy on Vercel
+### 3. Delete URL
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Deletes a shortened URL.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/pages/building-your-application/deploying) for more details.
+- **Endpoint**: `DELETE /api/delete`
+- **Headers**:
+    - `x-api-key`: Your API key
+    - `Content-Type`: `application/json`
+- **Body**:
+    ```json
+    {
+      "code": "AbCdEf",
+      "uid": "user_identifier"
+    }
+    ```
+- **Response**:
+    ```json
+    {
+      "success": true
+    }
+    ```
+
+## Security
+
+This project enforces API key validation for all write and read operations. Ensure your `API_KEY` is kept secret and not exposed in client-side code.
+
+## License
+
+[MIT](LICENSE)
