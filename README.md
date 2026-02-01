@@ -1,4 +1,4 @@
-# URL Shortener
+# Shorty - URL Shortener
 
 A robust, Firebase-backed URL shortening service built with Next.js. This project provides a scalable API for creating, managing, and retrieving shortened URLs.
 
