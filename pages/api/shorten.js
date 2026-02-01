@@ -39,7 +39,7 @@ export default async function handler(req, res) {
     return res.status(405).end();
   }
 
-  const { longUrl, uid } = req.body;
+  const { longUrl, uid, name } = req.body;
 
   if (!longUrl || !uid) {
     return res.status(400).json({ error: "Missing data" });
@@ -51,6 +51,21 @@ export default async function handler(req, res) {
 
   if (blockedHosts.includes(new URL(longUrl).hostname)) {
     return res.status(400).json({ error: "Blocked URL" });
+  }
+
+  const existingSnapshot = await adminDb
+    .collection("urls")
+    .where("uid", "==", uid)
+    .where("longUrl", "==", longUrl)
+    .limit(1)
+    .get();
+
+  if (!existingSnapshot.empty) {
+    const existingDoc = existingSnapshot.docs[0];
+    return res.status(200).json({
+      shortUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/${existingDoc.id}`,
+      existing: true,
+    });
   }
 
   const reachable = await isUrlReachable(longUrl);
@@ -65,6 +80,7 @@ export default async function handler(req, res) {
   await adminDb.collection("urls").doc(code).set({
     longUrl,
     uid,
+    name: name || "",
     clicks: 0,
     createdAt: FieldValue.serverTimestamp(),
   });

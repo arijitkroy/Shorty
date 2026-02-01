@@ -6,17 +6,27 @@ export default async function handler(req, res) {
 
   if (req.method !== "GET") return res.status(405).end();
 
-  const { uid } = req.query;
+  const { uid, limit = "10", startAfter } = req.query;
 
   if (!uid) {
     return res.status(400).json({ error: "Missing uid" });
   }
 
-  const snapshot = await adminDb
+  const limitNum = parseInt(limit);
+  let query = adminDb
     .collection("urls")
     .where("uid", "==", uid)
     .orderBy("createdAt", "desc")
-    .get();
+    .limit(limitNum);
+
+  if (startAfter) {
+    const startAfterDoc = await adminDb.collection("urls").doc(startAfter).get();
+    if (startAfterDoc.exists) {
+      query = query.startAfter(startAfterDoc);
+    }
+  }
+
+  const snapshot = await query.get();
 
   const urls = snapshot.docs.map(doc => {
     const data = doc.data();
@@ -30,5 +40,7 @@ export default async function handler(req, res) {
     };
   });
 
-  res.status(200).json(urls);
+  const lastVisible = snapshot.docs.length > 0 ? snapshot.docs[snapshot.docs.length - 1].id : null;
+
+  res.status(200).json({ urls, lastVisible });
 }
