@@ -5,7 +5,7 @@ export default function Navbar({ user }) {
   return (
     <nav className="glass flex items-center justify-between px-6 py-4">
       <h1 className="text-xl font-bold text-purple-400">
-        Shorty
+        Shorty - URL Shortener
       </h1>
 
       <div className="flex items-center gap-4">
