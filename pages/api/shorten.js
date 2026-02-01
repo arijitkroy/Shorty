@@ -75,7 +75,17 @@ export default async function handler(req, res) {
     });
   }
 
-  const code = nanoid(6);
+  let code;
+  let isUnique = false;
+
+  // Collision detection loop
+  while (!isUnique) {
+    code = nanoid(6);
+    const doc = await adminDb.collection("urls").doc(code).get();
+    if (!doc.exists) {
+      isUnique = true;
+    }
+  }
 
   await adminDb.collection("urls").doc(code).set({
     longUrl,
