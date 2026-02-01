@@ -3,7 +3,7 @@ import { auth } from "@/lib/firebase";
 
 export default function Navbar({ user }) {
   return (
-    <nav className="glass flex items-center justify-between px-6 py-4">
+    <nav className="glass !rounded-t-none !border-t-0 flex items-center justify-between px-6 py-4">
       <h1 className="text-xl font-bold text-purple-400">
         Shorty - URL Shortener
       </h1>
